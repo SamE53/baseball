@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sam's BL(Baseball Loving) life</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --dodgers-blue: #005a9c;
+            --orix-gold: #b3a269;
+            --kia-red: #c7012e;
+            --kia-black: #1d1d1b;
+            --text-gray: #888;
+            --lost-day-bg: #dcdcdc; 
+            --past-day-bg: #f8f9fa; 
+            --calendar-border: #eeeeee; 
+        }
+        
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); padding: 20px; min-width: 1100px; }
+        .container { width: 1050px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .main-title { 
+            text-align: center; 
+            font-family: 'Georgia', serif; 
+            font-size: 2.5em; 
+            font-weight: bold; 
+            margin-bottom: 25px; 
+            color: var(--kia-black);
+        }
+
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .team-stat { padding: 15px; border-radius: 10px; text-align: center; height: 120px; display: flex; flex-direction: column; justify-content: center; background: #ffffff; border: 3px solid #ddd; }
+        .stat-0 { border-color: var(--dodgers-blue); color: var(--dodgers-blue); }
+        .stat-1 { border-color: var(--orix-gold); color: var(--orix-gold); }
+        .stat-2 { border-color: var(--kia-red); color: var(--kia-red); } 
+        .team-info-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; }
+        .team-logo { width: 40px; height: 40px; object-fit: contain; }
+        .team-link { color: inherit; text-decoration: none; font-weight: 800; font-size: 1.35em; }
+        .team-link:hover { text-decoration: underline; }
+        .stats-text { font-family: 'Courier New', monospace; font-size: 0.9em; font-weight: bold; line-height: 1.5; text-align: left; margin: 0 auto; color: #333; }
+        
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .btn-month { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        #currentMonthDisplay { font-size: 1.5em; font-weight: bold; color: #555; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 150px); background: #ddd; border: 1px solid #ddd; width: fit-content; margin: 0 auto; }
+        .day-header { background: #f8f9fa; padding: 10px; text-align: center; font-weight: bold; font-size: 0.8em; color: #555; }
+        .day { width: 150px; height: 130px; background: white; padding: 10px; overflow: hidden; box-sizing: border-box; transition: background 0.3s; border: 0.5px solid var(--calendar-border); }
+        
+        /* 오늘 날짜 테두리 (2px 설정) */
+        .day.today { border: 2px solid var(--kia-black) !important; z-index: 5; position: relative; }
+        
+        .day.is-past { background: var(--past-day-bg); color: #888; }
+        .day.all-lost { background: var(--lost-day-bg) !important; } 
+        .day-num { font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.9em; }
+        .team-row { display: flex; align-items: center; height: 28px; font-size: 0.8em; font-weight: 700; white-space: nowrap; }
+        .game-time { color: var(--text-gray); margin-right: 4px; font-weight: normal; }
+        
+        .memo-dot { margin-left: 3px; font-size: 1.2em; line-height: 0; cursor: help; }
+        .dot-0 { color: var(--dodgers-blue); }
+        .dot-1 { color: var(--orix-gold); }
+        .dot-2 { color: var(--kia-red); }
+
+        input[type="checkbox"] { appearance: none; width: 15px; height: 15px; border: 1.5px solid #ccc; border-radius: 3px; margin-right: 6px; cursor: pointer; flex-shrink: 0; position: relative; }
+        input[type="checkbox"]:checked::after { content: 'L'; position: absolute; top: -3px; left: 3px; color: white; font-size: 11px; transform: scaleX(-1) rotate(-35deg); }
+        .check-0:checked { background-color: var(--dodgers-blue); border-color: var(--dodgers-blue); }
+        .check-1:checked { background-color: var(--orix-gold); border-color: var(--orix-gold); }
+        .check-2:checked { background-color: var(--kia-red); border-color: var(--kia-red); }
+        .team-label { cursor: pointer; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase 설정 (교수님 설정값)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5D5jYrB72rJxvp3dgVPgS3ew0M-CFKNg",
+            authDomain: "sam-s-bl-life.firebaseapp.com",
+            projectId: "sam-s-bl-life",
+            storageBucket: "sam-s-bl-life.firebasestorage.app",
+            messagingSenderId: "538182556502",
+            appId: "1:538182556502:web:96878b29efd4714c3d54f7",
+            measurementId: "G-HQDJPCXJXF"
+        };
+
+        // 관리자 비밀번호
+        const ADMIN_PASSWORD = "1853";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentDate = new Date();
+        const dodgersOffDays = ["2026-03-30", "2026-04-03", "2026-04-10", "2026-04-17", "2026-05-01", "2026-05-08", "2026-05-22", "2026-05-29", "2026-06-09", "2026-06-19", "2026-06-26", "2026-07-10", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-24", "2026-07-28", "2026-08-07", "2026-08-21", "2026-08-25", "2026-09-11", "2026-09-22"];
+        const orixOffDays = ["2026-03-30", "2026-04-06", "2026-04-13", "2026-04-20", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
+
+        const teams = [
+            { name: "LA Dodgers", short: "LAD", start: "2026-03-27", end: "2026-09-28", link: "https://www.mlb.com/dodgers", logo: "LAD.png" },
+            { name: "Orix Buffaloes", short: "ORI", start: "2026-03-27", end: "2026-09-29", link: "https://www.buffaloes.co.jp/", logo: "Orix.png" },
+            { name: "Kia Tigers", short: "KIA", start: "2026-03-28", end: "2026-09-06", link: "https://tigers.co.kr/", logo: "kia.png" }
+        ];
+
+        let gameData = {};
+
+        // 1. Firebase 실시간 데이터 구독
+        onSnapshot(doc(db, "baseball", "data"), (snapshot) => {
+            if (snapshot.exists()) {
+                gameData = snapshot.data();
+                renderAll();
+            }
+        });
+
+        // 2. 관리자 인증 함수
+        function checkAuth() {
+            const pw = prompt("관리자 비밀번호를 입력하세요:");
+            return pw === ADMIN_PASSWORD;
+        }
+
+        // 3. Firebase 저장 함수
+        async function saveToFirebase() {
+            try {
+                await setDoc(doc(db, "baseball", "data"), gameData);
+            } catch (e) {
+                alert("저장에 실패했습니다. Firestore 규칙을 확인하세요.");
+            }
+        }
+
+        window.toggleWin = async (date, idx) => {
+            if (!checkAuth()) return;
+            if (!gameData[date]) gameData[date] = {};
+            if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "" };
+            gameData[date][idx].win = !gameData[date][idx].win;
+            await saveToFirebase();
+        };
+
+        window.editGame = async (date, idx) => {
+            if (!hasGame(idx, date)) return;
+            if (!checkAuth()) return;
+            const cur = gameData[date]?.[idx] || { win: false, time: "", memo: "" };
+            const time = prompt(`경기 시간:`, cur.time); if (time === null) return;
+            const memo = prompt(`메모:`, cur.memo); if (memo === null) return;
+            if (!gameData[date]) gameData[date] = {};
+            gameData[date][idx] = { ...cur, time, memo };
+            await saveToFirebase();
+        };
+
+        function hasGame(teamIdx, dateStr) {
+            const team = teams[teamIdx];
+            const date = new Date(dateStr);
+            if (dateStr < team.start || dateStr > team.end) return false;
+            if (team.short === "LAD" && dodgersOffDays.includes(dateStr)) return false;
+            if (team.short === "KIA") {
+                if (date.getDay() === 1) return false;
+                if (dateStr >= "2026-07-10" && dateStr <= "2026-07-15") return false;
+            }
+            if (team.short === "ORI" && orixOffDays.includes(dateStr)) return false;
+            return true;
+        }
+
+        function renderAll() {
+            updateStats();
+            renderCalendar();
+        }
+
+        function formatAvg(win, total) {
+            if (total === 0) return ".000";
+            let avg = (win / total).toFixed(3);
+            return avg.startsWith("0") ? avg.substring(1) : avg;
+        }
+
+        function updateStats() {
+            const dash = document.getElementById('dashboard');
+            dash.innerHTML = '';
+            const todayStr = new Date().toLocaleDateString('sv-SE');
+            teams.forEach((team, idx) => {
+                const allDates = Object.keys(gameData).sort();
+                const totalPlayed = allDates.filter(d => d <= todayStr && d >= team.start && hasGame(idx, d)).length;
+                const totalWins = allDates.filter(d => d <= todayStr && d >= team.start && hasGame(idx, d) && gameData[d][idx]?.win).length;
+                const last10Entries = allDates.filter(d => d <= todayStr && d >= team.start && hasGame(idx, d)).slice(-10);
+                const last10Wins = last10Entries.filter(d => gameData[d][idx]?.win).length;
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+                const weekStartStr = sevenDaysAgo.toLocaleDateString('sv-SE');
+                const weeklyEntries = allDates.filter(d => d >= weekStartStr && d <= todayStr && hasGame(idx, d));
+                const weeklyWins = weeklyEntries.filter(d => gameData[d][idx]?.win).length;
+                dash.innerHTML += `<div class="team-stat stat-${idx}"><div class="team-info-header"><img src="${team.logo}" class="team-logo" alt="${team.short} logo"><a href="${team.link}" target="_blank" class="team-link">${team.name}</a></div><div class="stats-text">Total ${formatAvg(totalWins, totalPlayed)}<br>Last10 ${formatAvg(last10Wins, last10Entries.length)}<br>Weekly ${formatAvg(weeklyWins, weeklyEntries.length)}</div></div>`;
+            });
+        }
+
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = `<div class="day-header">SUN</div><div class="day-header">MON</div><div class="day-header">TUE</div><div class="day-header">WED</div><div class="day-header">THU</div><div class="day-header">FRI</div><div class="day-header">SAT</div>`;
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const todayStr = new Date().toLocaleDateString('sv-SE');
+            document.getElementById('currentMonthDisplay').innerText = `${year}. ${String(month + 1).padStart(2, '0')}`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) calendar.innerHTML += `<div class="day"></div>`;
+            for (let d = 1; d <= lastDate; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = dateStr === todayStr;
+                const isPast = dateStr < todayStr;
+                let winCount = 0; let activeGamesInDay = 0; let teamRowsHtml = '';
+                teams.forEach((team, idx) => {
+                    const isGameDay = hasGame(idx, dateStr);
+                    const info = gameData[dateStr]?.[idx] || { win: false, time: "", memo: "" };
+                    if (isGameDay) {
+                        activeGamesInDay++; if (info.win) winCount++;
+                        teamRowsHtml += `<div class="team-row"><input type="checkbox" class="check-${idx}" ${info.win ? 'checked' : ''} onchange="toggleWin('${dateStr}', ${idx})"><span class="team-label" onclick="editGame('${dateStr}', ${idx})">${info.time ? `<span class="game-time">${info.time}</span>` : ''}${team.short}${info.memo ? `<span class="memo-dot dot-${idx}" title="${info.memo}">●</span>` : ''}</span></div>`;
+                    } else { teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:21px;">-</span></div>`; }
+                });
+                let dayClass = isToday ? 'today' : '';
+                if (isPast) { dayClass += ' is-past'; if (activeGamesInDay > 0 && winCount === 0) dayClass += ' all-lost'; }
+                calendar.innerHTML += `<div class="day ${dayClass}"><span class="day-num">${d}</span>${teamRowsHtml}</div>`;
+            }
+            const totalCells = firstDay + lastDate;
+            const extraCells = (7 - (totalCells % 7)) % 7;
+            for (let j = 0; j < extraCells; j++) calendar.innerHTML += `<div class="day"></div>`;
+        }
+
+        window.changeMonth = (v) => { currentDate.setMonth(currentDate.getMonth() + v); renderAll(); };
+        
+        // 초기 로딩용
+        renderAll();
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="main-title">Sam's BL life</div>
+    <div id="dashboard" class="dashboard"></div>
+    <div class="calendar-header">
+        <button class="btn-month" onclick="changeMonth(-1)">◀ 이전 달</button>
+        <div id="currentMonthDisplay"></div>
+        <button class="btn-month" onclick="changeMonth(1)">다음 달 ▶</button>
+    </div>
+    <div id="calendar" class="calendar-grid"></div>
+</div>
+
+</body>
+</html>
