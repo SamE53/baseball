@@ -155,32 +155,36 @@
         function updateStats() {
             const dash = document.getElementById('dashboard');
             dash.innerHTML = '';
+            
+            // 오늘 날짜 0시 0분 기준 (비교용)
             const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(today.getDate() - 1);
-            const yesterdayStr = yesterday.toLocaleDateString('sv-SE');
+            today.setHours(0,0,0,0);
 
             teams.forEach((team, idx) => {
-                // 1. 시즌 전체 (시작일부터 어제까지 경기가 있었던 모든 날짜)
-                let seasonPlayedDates = [];
+                let playedDates = [];
                 let d = new Date(team.start);
-                while(d <= yesterday) {
-                    let dStr = d.toLocaleDateString('sv-SE');
-                    if(hasGame(idx, dStr)) seasonPlayedDates.push(dStr);
+                
+                // 시즌 시작일부터 '어제'까지 루프 돌며 실제 경기일만 추출
+                while(d < today) {
+                    let dStr = d.toISOString().split('T')[0];
+                    if(hasGame(idx, dStr)) playedDates.push(dStr);
                     d.setDate(d.getDate() + 1);
                 }
-                const totalWins = seasonPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
-                const totalPlayed = seasonPlayedDates.length;
 
-                // 2. Last 10 (어제부터 역산하여 경기가 있었던 최근 10경기)
-                const last10Wins = seasonPlayedDates.slice(-10).filter(date => gameData[date]?.[idx]?.win).length;
+                // 1. Total (어제까지 실제 경기일 중 승리 수)
+                const totalWins = playedDates.filter(date => gameData[date]?.[idx]?.win).length;
+                const totalPlayed = playedDates.length;
 
-                // 3. Weekly (어제부터 지난 7일간 경기가 있었던 수 기준)
-                const sevenDaysAgo = new Date(yesterday);
-                sevenDaysAgo.setDate(yesterday.getDate() - 6);
-                const weekPlayedDates = seasonPlayedDates.filter(date => date >= sevenDaysAgo.toLocaleDateString('sv-SE'));
-                const weeklyWins = weekPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
-                const weeklyPlayed = weekPlayedDates.length;
+                // 2. Last 10 (실제 경기일 중 마지막 10개 추출)
+                const last10Entries = playedDates.slice(-10);
+                const last10Wins = last10Entries.filter(date => gameData[date]?.[idx]?.win).length;
+
+                // 3. Weekly (어제 기준 지난 7일간 실제 경기일 필터링)
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                const weeklyPlayedDates = playedDates.filter(date => new Date(date) >= sevenDaysAgo);
+                const weeklyWins = weeklyPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
+                const weeklyPlayed = weeklyPlayedDates.length;
 
                 dash.innerHTML += `
                     <div class="team-stat stat-${idx}">
