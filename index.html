@@ -50,19 +50,8 @@
         .check-0:checked { background-color: var(--dodgers-blue); border-color: var(--dodgers-blue); }
         .check-1:checked { background-color: var(--orix-gold); border-color: var(--orix-gold); }
         .check-2:checked { background-color: var(--kia-red); border-color: var(--kia-red); }
-        
-        /* Edit 버튼 스타일 */
-        .edit-btn { 
-            position: fixed; bottom: 20px; right: 20px; 
-            background: #333; color: white; border: none; 
-            padding: 10px 18px; border-radius: 25px; 
-            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-            font-weight: bold; z-index: 1000;
-        }
-        .edit-btn:hover { background: #555; }
-        .edit-mode-indicator { 
-            text-align: center; color: #c7012e; font-weight: bold; margin-bottom: 10px; display: none;
-        }
+        .edit-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; z-index: 1000; }
+        .edit-mode-indicator { text-align: center; color: #c7012e; font-weight: bold; margin-bottom: 10px; display: none; }
     </style>
 
     <script type="module">
@@ -79,15 +68,14 @@
             measurementId: "G-HQDJPCXJXF"
         };
 
-        const ADMIN_PASSWORD = "1853";
-        let isEditMode = false; // 수정 모드 여부
-
+        const ADMIN_PASSWORD = "1234";
+        let isEditMode = false;
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         let currentDate = new Date();
+        
         const dodgersOffDays = ["2026-03-30", "2026-04-03", "2026-04-10", "2026-04-17", "2026-05-01", "2026-05-08", "2026-05-22", "2026-05-29", "2026-06-09", "2026-06-19", "2026-06-26", "2026-07-10", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-24", "2026-07-28", "2026-08-07", "2026-08-21", "2026-08-25", "2026-09-11", "2026-09-22"];
-        const orixOffDays = ["2026-03-30", "2026-04-06", "2026-04-13", "2026-04-20", "2026-04-27", "2026-04-30", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
+        const orixOffDays = ["2026-03-30", "2026-04-06", "2026-04-13", "2026-04-20", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
         const teams = [
             { name: "LA Dodgers", short: "LAD", start: "2026-03-27", end: "2026-09-28", link: "https://www.mlb.com/dodgers", logo: "LAD.png" },
             { name: "Orix Buffaloes", short: "ORI", start: "2026-03-27", end: "2026-09-29", link: "https://www.buffaloes.co.jp/", logo: "Orix.png" },
@@ -103,50 +91,38 @@
             }
         });
 
-        // 🔐 수동 Edit 모드 전환 함수
         window.toggleEditMode = () => {
             if (isEditMode) {
                 isEditMode = false;
                 document.getElementById('editIndicator').style.display = 'none';
                 document.getElementById('editBtn').innerText = 'Edit';
-                renderAll();
             } else {
-                const pw = prompt("관리자 비밀번호를 입력하세요:");
-                if (pw === ADMIN_PASSWORD) {
+                if (prompt("관리자 비밀번호:") === ADMIN_PASSWORD) {
                     isEditMode = true;
                     document.getElementById('editIndicator').style.display = 'block';
                     document.getElementById('editBtn').innerText = 'Exit Edit';
-                    renderAll();
-                } else {
-                    alert("비밀번호가 틀렸습니다.");
-                }
+                } else alert("비밀번호 오류");
             }
+            renderAll();
         };
 
         async function saveToFirebase() {
-            try {
-                await setDoc(doc(db, "baseball", "data"), gameData);
-            } catch (e) {
-                alert("저장 권한이 없습니다.");
-            }
+            try { await setDoc(doc(db, "baseball", "data"), gameData); }
+            catch (e) { alert("저장 권한 없음"); }
         }
 
         window.toggleWin = async (date, idx) => {
-            if (!isEditMode) return; // 수정 모드 아닐 땐 무시
+            if (!isEditMode) return;
             if (!gameData[date]) gameData[date] = {};
             if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "" };
             gameData[date][idx].win = !gameData[date][idx].win;
             await saveToFirebase();
         };
 
-        window.handleMemoClick = (memo) => {
-            if (memo) alert("메모: " + memo);
-        };
+        window.handleMemoClick = (memo) => { if (memo) alert("메모: " + memo); };
 
         window.editGame = async (date, idx) => {
-            if (!hasGame(idx, date)) return;
-            if (!isEditMode) return; // 수정 모드 아닐 땐 무시
-            
+            if (!hasGame(idx, date) || !isEditMode) return;
             const cur = gameData[date]?.[idx] || { win: false, time: "", memo: "" };
             const time = prompt(`경기 시간:`, cur.time); if (time === null) return;
             const memo = prompt(`메모:`, cur.memo); if (memo === null) return;
@@ -168,10 +144,7 @@
             return true;
         }
 
-        function renderAll() {
-            updateStats();
-            renderCalendar();
-        }
+        function renderAll() { updateStats(); renderCalendar(); }
 
         function formatAvg(win, total) {
             if (total === 0) return ".000";
@@ -179,35 +152,48 @@
             return avg.startsWith("0") ? avg.substring(1) : avg;
         }
 
-        // 📈 승률 계산 로직 수정 (경기가 있는 날만 정확히 필터링)
         function updateStats() {
             const dash = document.getElementById('dashboard');
             dash.innerHTML = '';
-            const todayStr = new Date().toLocaleDateString('sv-SE');
-            
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const yesterdayStr = yesterday.toLocaleDateString('sv-SE');
+
             teams.forEach((team, idx) => {
-                // '오늘'까지 중에서 실제 경기가 지정되었던 모든 날짜 추출
-                const playedDates = Object.keys(gameData).filter(d => 
-                    d <= todayStr && 
-                    d >= team.start && 
-                    hasGame(idx, d)
-                );
-                
-                const totalPlayed = playedDates.length;
-                const totalWins = playedDates.filter(d => gameData[d][idx]?.win).length;
-                
-                // 최근 10경기
-                const last10Entries = playedDates.slice(-10);
-                const last10Wins = last10Entries.filter(d => gameData[d][idx]?.win).length;
+                // 1. 시즌 전체 (시작일부터 어제까지 경기가 있었던 모든 날짜)
+                let seasonPlayedDates = [];
+                let d = new Date(team.start);
+                while(d <= yesterday) {
+                    let dStr = d.toLocaleDateString('sv-SE');
+                    if(hasGame(idx, dStr)) seasonPlayedDates.push(dStr);
+                    d.setDate(d.getDate() + 1);
+                }
+                const totalWins = seasonPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
+                const totalPlayed = seasonPlayedDates.length;
 
-                // 주간 (최근 7일간 경기가 있었던 날만)
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-                const weekStartStr = sevenDaysAgo.toLocaleDateString('sv-SE');
-                const weeklyEntries = playedDates.filter(d => d >= weekStartStr);
-                const weeklyWins = weeklyEntries.filter(d => gameData[d][idx]?.win).length;
+                // 2. Last 10 (어제부터 역산하여 경기가 있었던 최근 10경기)
+                const last10Wins = seasonPlayedDates.slice(-10).filter(date => gameData[date]?.[idx]?.win).length;
 
-                dash.innerHTML += `<div class="team-stat stat-${idx}"><div class="team-info-header"><img src="${team.logo}" class="team-logo" alt="${team.short} logo"><a href="${team.link}" target="_blank" class="team-link">${team.name}</a></div><div class="stats-text">Total ${formatAvg(totalWins, totalPlayed)}<br>Last10 ${formatAvg(last10Wins, last10Entries.length)}<br>Weekly ${formatAvg(weeklyWins, weeklyEntries.length)}</div></div>`;
+                // 3. Weekly (어제부터 지난 7일간 경기가 있었던 수 기준)
+                const sevenDaysAgo = new Date(yesterday);
+                sevenDaysAgo.setDate(yesterday.getDate() - 6);
+                const weekPlayedDates = seasonPlayedDates.filter(date => date >= sevenDaysAgo.toLocaleDateString('sv-SE'));
+                const weeklyWins = weekPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
+                const weeklyPlayed = weekPlayedDates.length;
+
+                dash.innerHTML += `
+                    <div class="team-stat stat-${idx}">
+                        <div class="team-info-header">
+                            <img src="${team.logo}" class="team-logo">
+                            <a href="${team.link}" target="_blank" class="team-link">${team.name}</a>
+                        </div>
+                        <div class="stats-text">
+                            Total  ${formatAvg(totalWins, totalPlayed)} (${totalWins}/${totalPlayed})<br>
+                            Last10 ${formatAvg(last10Wins, 10)} (${last10Wins}/10)<br>
+                            Weekly ${formatAvg(weeklyWins, weeklyPlayed)} (${weeklyWins}/${weeklyPlayed})
+                        </div>
+                    </div>`;
             });
         }
 
@@ -231,22 +217,19 @@
                     const info = gameData[dateStr]?.[idx] || { win: false, time: "", memo: "" };
                     if (isGameDay) {
                         activeGamesInDay++; if (info.win) winCount++;
-                        // 메모 점 클릭 시 알림창 뜨도록 handleMemoClick 연결
                         teamRowsHtml += `<div class="team-row">
                             <input type="checkbox" class="check-${idx}" ${info.win ? 'checked' : ''} ${isEditMode ? '' : 'disabled'} onchange="toggleWin('${dateStr}', ${idx})">
                             <span class="team-label" onclick="${isEditMode ? `editGame('${dateStr}', ${idx})` : `handleMemoClick('${info.memo}')`}">
                                 ${info.time ? `<span class="game-time">${info.time}</span>` : ''}${team.short}${info.memo ? `<span class="memo-dot dot-${idx}">●</span>` : ''}
-                            </span>
-                        </div>`;
-                    } else { teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:21px;">-</span></div>`; }
+                            </span></div>`;
+                    } else teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:21px;">-</span></div>`;
                 });
                 let dayClass = isToday ? 'today' : '';
                 if (isPast) { dayClass += ' is-past'; if (activeGamesInDay > 0 && winCount === 0) dayClass += ' all-lost'; }
                 calendar.innerHTML += `<div class="day ${dayClass}"><span class="day-num">${d}</span>${teamRowsHtml}</div>`;
             }
-            const totalCells = firstDay + lastDate;
-            const extraCells = (7 - (totalCells % 7)) % 7;
-            for (let j = 0; j < extraCells; j++) calendar.innerHTML += `<div class="day"></div>`;
+            const extra = (7 - ((firstDay + lastDate) % 7)) % 7;
+            for (let j = 0; j < extra; j++) calendar.innerHTML += `<div class="day"></div>`;
         }
 
         window.changeMonth = (v) => { currentDate.setMonth(currentDate.getMonth() + v); renderAll(); };
