@@ -45,6 +45,10 @@
         .dot-0 { color: var(--dodgers-blue); }
         .dot-1 { color: var(--orix-gold); }
         .dot-2 { color: var(--kia-red); }
+        
+        /* 취소된 경기 스타일 */
+        .game-cancelled { text-decoration: line-through; color: #bbb !important; }
+
         input[type="checkbox"] { appearance: none; width: 15px; height: 15px; border: 1.5px solid #ccc; border-radius: 3px; margin-right: 6px; cursor: pointer; flex-shrink: 0; position: relative; }
         input[type="checkbox"]:checked::after { content: 'L'; position: absolute; top: -3px; left: 3px; color: white; font-size: 11px; transform: scaleX(-1) rotate(-35deg); }
         .check-0:checked { background-color: var(--dodgers-blue); border-color: var(--dodgers-blue); }
@@ -75,7 +79,7 @@
         let currentDate = new Date();
         
         const dodgersOffDays = ["2026-03-30", "2026-04-03", "2026-04-10", "2026-04-17", "2026-05-01", "2026-05-08", "2026-05-22", "2026-05-29", "2026-06-09", "2026-06-19", "2026-06-26", "2026-07-10", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-24", "2026-07-28", "2026-08-07", "2026-08-21", "2026-08-25", "2026-09-11", "2026-09-22"];
-        const orixOffDays = ["2026-03-30", "2026-04-06", "2026-04-13", "2026-04-20", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
+        const orixOffDays = ["2026-03-30", "2026-04-06","2026-04-10", "2026-04-13", "2026-04-20", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
         const teams = [
             { name: "LA Dodgers", short: "LAD", start: "2026-03-27", end: "2026-09-28", link: "https://www.mlb.com/dodgers", logo: "LAD.png" },
             { name: "Orix Buffaloes", short: "ORI", start: "2026-03-27", end: "2026-09-29", link: "https://www.buffaloes.co.jp/", logo: "Orix.png" },
@@ -114,7 +118,14 @@
         window.toggleWin = async (date, idx) => {
             if (!isEditMode) return;
             if (!gameData[date]) gameData[date] = {};
-            if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "" };
+            if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "", cancelled: false };
+            
+            // 취소된 경기는 체크 불가 처리 (원하신다면 가능하게 둘 수도 있습니다)
+            if (gameData[date][idx].cancelled) {
+                alert("취소된 경기는 결과 입력을 할 수 없습니다.");
+                return;
+            }
+            
             gameData[date][idx].win = !gameData[date][idx].win;
             await saveToFirebase();
         };
@@ -123,11 +134,23 @@
 
         window.editGame = async (date, idx) => {
             if (!hasGame(idx, date) || !isEditMode) return;
-            const cur = gameData[date]?.[idx] || { win: false, time: "", memo: "" };
+            const cur = gameData[date]?.[idx] || { win: false, time: "", memo: "", cancelled: false };
+            
             const time = prompt(`경기 시간:`, cur.time); if (time === null) return;
             const memo = prompt(`메모:`, cur.memo); if (memo === null) return;
+            const cancelInput = prompt(`취소된 경기인가요? (y/n):`, cur.cancelled ? 'y' : 'n'); 
+            if (cancelInput === null) return;
+            
+            const isCancelled = cancelInput.toLowerCase() === 'y';
+
             if (!gameData[date]) gameData[date] = {};
-            gameData[date][idx] = { ...cur, time, memo };
+            gameData[date][idx] = { 
+                ...cur, 
+                time, 
+                memo, 
+                cancelled: isCancelled,
+                win: isCancelled ? false : cur.win // 취소되면 승리 체크 해제
+            };
             await saveToFirebase();
         };
 
@@ -155,8 +178,6 @@
         function updateStats() {
             const dash = document.getElementById('dashboard');
             dash.innerHTML = '';
-            
-            // 오늘 날짜 0시 0분 기준 (비교용)
             const today = new Date();
             today.setHours(0,0,0,0);
 
@@ -164,22 +185,21 @@
                 let playedDates = [];
                 let d = new Date(team.start);
                 
-                // 시즌 시작일부터 '어제'까지 루프 돌며 실제 경기일만 추출
                 while(d < today) {
                     let dStr = d.toISOString().split('T')[0];
-                    if(hasGame(idx, dStr)) playedDates.push(dStr);
+                    // 경기가 있는 날이면서 + '취소'되지 않은 날만 통계 분모에 포함
+                    if(hasGame(idx, dStr) && !gameData[dStr]?.[idx]?.cancelled) {
+                        playedDates.push(dStr);
+                    }
                     d.setDate(d.getDate() + 1);
                 }
 
-                // 1. Total (어제까지 실제 경기일 중 승리 수)
                 const totalWins = playedDates.filter(date => gameData[date]?.[idx]?.win).length;
                 const totalPlayed = playedDates.length;
 
-                // 2. Last 10 (실제 경기일 중 마지막 10개 추출)
                 const last10Entries = playedDates.slice(-10);
                 const last10Wins = last10Entries.filter(date => gameData[date]?.[idx]?.win).length;
 
-                // 3. Weekly (어제 기준 지난 7일간 실제 경기일 필터링)
                 const sevenDaysAgo = new Date(today);
                 sevenDaysAgo.setDate(today.getDate() - 7);
                 const weeklyPlayedDates = playedDates.filter(date => new Date(date) >= sevenDaysAgo);
@@ -216,18 +236,24 @@
                 const isToday = dateStr === todayStr;
                 const isPast = dateStr < todayStr;
                 let winCount = 0; let activeGamesInDay = 0; let teamRowsHtml = '';
+                
                 teams.forEach((team, idx) => {
                     const isGameDay = hasGame(idx, dateStr);
-                    const info = gameData[dateStr]?.[idx] || { win: false, time: "", memo: "" };
+                    const info = gameData[dateStr]?.[idx] || { win: false, time: "", memo: "", cancelled: false };
+                    
                     if (isGameDay) {
                         activeGamesInDay++; if (info.win) winCount++;
-                        teamRowsHtml += `<div class="team-row">
-                            <input type="checkbox" class="check-${idx}" ${info.win ? 'checked' : ''} ${isEditMode ? '' : 'disabled'} onchange="toggleWin('${dateStr}', ${idx})">
+                        // 취소 여부에 따라 클래스 추가
+                        const cancelClass = info.cancelled ? 'game-cancelled' : '';
+                        
+                        teamRowsHtml += `<div class="team-row ${cancelClass}">
+                            <input type="checkbox" class="check-${idx}" ${info.win ? 'checked' : ''} ${isEditMode && !info.cancelled ? '' : 'disabled'} onchange="toggleWin('${dateStr}', ${idx})">
                             <span class="team-label" onclick="${isEditMode ? `editGame('${dateStr}', ${idx})` : `handleMemoClick('${info.memo}')`}">
                                 ${info.time ? `<span class="game-time">${info.time}</span>` : ''}${team.short}${info.memo ? `<span class="memo-dot dot-${idx}">●</span>` : ''}
                             </span></div>`;
                     } else teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:21px;">-</span></div>`;
                 });
+                
                 let dayClass = isToday ? 'today' : '';
                 if (isPast) { dayClass += ' is-past'; if (activeGamesInDay > 0 && winCount === 0) dayClass += ' all-lost'; }
                 calendar.innerHTML += `<div class="day ${dayClass}"><span class="day-num">${d}</span>${teamRowsHtml}</div>`;
