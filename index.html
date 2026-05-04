@@ -45,10 +45,7 @@
         .dot-0 { color: var(--dodgers-blue); }
         .dot-1 { color: var(--orix-gold); }
         .dot-2 { color: var(--kia-red); }
-        
-        /* 취소된 경기 스타일 */
         .game-cancelled { text-decoration: line-through; color: #bbb !important; }
-
         input[type="checkbox"] { appearance: none; width: 15px; height: 15px; border: 1.5px solid #ccc; border-radius: 3px; margin-right: 6px; cursor: pointer; flex-shrink: 0; position: relative; }
         input[type="checkbox"]:checked::after { content: 'L'; position: absolute; top: -3px; left: 3px; color: white; font-size: 11px; transform: scaleX(-1) rotate(-35deg); }
         .check-0:checked { background-color: var(--dodgers-blue); border-color: var(--dodgers-blue); }
@@ -56,6 +53,7 @@
         .check-2:checked { background-color: var(--kia-red); border-color: var(--kia-red); }
         .edit-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; z-index: 1000; }
         .edit-mode-indicator { text-align: center; color: #c7012e; font-weight: bold; margin-bottom: 10px; display: none; }
+        .saving-indicator { text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 10px; display: none; }
     </style>
 
     <script type="module">
@@ -92,7 +90,12 @@
             if (snapshot.exists()) {
                 gameData = snapshot.data();
                 renderAll();
+            } else {
+                console.log("데이터가 없습니다. 초기화합니다.");
+                gameData = {};
             }
+        }, (error) => {
+            console.error("Firestore 읽기 오류:", error);
         });
 
         window.toggleEditMode = () => {
@@ -110,22 +113,34 @@
             renderAll();
         };
 
-        rules_version = '2';
-        service cloud.firestore {
-            match /databases/{database}/documents {
-                match /baseball/{document=**} {
-                    allow read: if true;
-                 allow write: if true;
-                }
-                                }
-                    }
+        async function saveToFirebase() {
+            try {
+                console.log("저장 시도:", gameData);
+                document.getElementById('savingIndicator').style.display = 'block';
+                
+                await setDoc(doc(db, "baseball", "data"), gameData, { merge: true });
+                
+                console.log("저장 성공!");
+                document.getElementById('savingIndicator').innerText = "✓ 저장 완료!";
+                document.getElementById('savingIndicator').style.color = '#4CAF50';
+                document.getElementById('savingIndicator').style.display = 'block';
+                
+                setTimeout(() => {
+                    document.getElementById('savingIndicator').style.display = 'none';
+                }, 2000);
+            }
+            catch (e) {
+                console.error("저장 오류 상세:", e);
+                alert("저장 실패: " + e.message + "\n\n콘솔(F12)에서 더 자세한 정보를 확인하세요.");
+                document.getElementById('savingIndicator').style.display = 'none';
+            }
+        }
 
         window.toggleWin = async (date, idx) => {
             if (!isEditMode) return;
             if (!gameData[date]) gameData[date] = {};
             if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "", cancelled: false };
             
-            // 취소된 경기는 체크 불가 처리 (원하신다면 가능하게 둘 수도 있습니다)
             if (gameData[date][idx].cancelled) {
                 alert("취소된 경기는 결과 입력을 할 수 없습니다.");
                 return;
@@ -154,7 +169,7 @@
                 time, 
                 memo, 
                 cancelled: isCancelled,
-                win: isCancelled ? false : cur.win // 취소되면 승리 체크 해제
+                win: isCancelled ? false : cur.win
             };
             await saveToFirebase();
         };
@@ -192,7 +207,6 @@
                 
                 while(d < today) {
                     let dStr = d.toISOString().split('T')[0];
-                    // 경기가 있는 날이면서 + '취소'되지 않은 날만 통계 분모에 포함
                     if(hasGame(idx, dStr) && !gameData[dStr]?.[idx]?.cancelled) {
                         playedDates.push(dStr);
                     }
@@ -214,7 +228,7 @@
                 dash.innerHTML += `
                     <div class="team-stat stat-${idx}">
                         <div class="team-info-header">
-                            <img src="${team.logo}" class="team-logo">
+                            ![image](${team.logo})
                             <a href="${team.link}" target="_blank" class="team-link">${team.name}</a>
                         </div>
                         <div class="stats-text">
@@ -248,7 +262,6 @@
                     
                     if (isGameDay) {
                         activeGamesInDay++; if (info.win) winCount++;
-                        // 취소 여부에 따라 클래스 추가
                         const cancelClass = info.cancelled ? 'game-cancelled' : '';
                         
                         teamRowsHtml += `<div class="team-row ${cancelClass}">
@@ -275,6 +288,7 @@
 <div class="container">
     <div class="main-title">Sam's BL life</div>
     <div id="editIndicator" class="edit-mode-indicator">● Edit Mode Active</div>
+    <div id="savingIndicator" class="saving-indicator">💾 저장 중...</div>
     <div id="dashboard" class="dashboard"></div>
     <div class="calendar-header">
         <button class="btn-month" onclick="changeMonth(-1)">◀ 이전 달</button>
