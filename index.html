@@ -110,10 +110,15 @@
             renderAll();
         };
 
-        async function saveToFirebase() {
-            try { await setDoc(doc(db, "baseball", "data"), gameData); }
-            catch (e) { alert("저장 권한 없음"); }
-        }
+        rules_version = '2';
+        service cloud.firestore {
+            match /databases/{database}/documents {
+                match /baseball/{document=**} {
+                    allow read: if true;
+                 allow write: if true;
+                }
+                                }
+                    }
 
         window.toggleWin = async (date, idx) => {
             if (!isEditMode) return;
