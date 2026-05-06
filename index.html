@@ -59,6 +59,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // ✅ 추가: Firebase Auth import
+        import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC5D5jYrB72rJxvp3dgVPgS3ew0M-CFKNg",
@@ -74,6 +76,8 @@
         let isEditMode = false;
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        // ✅ 추가: auth 인스턴스 생성
+        const auth = getAuth(app);
         let currentDate = new Date();
         
         const dodgersOffDays = ["2026-03-30", "2026-04-03", "2026-04-10", "2026-04-17", "2026-05-01", "2026-05-08", "2026-05-22", "2026-05-29", "2026-06-09", "2026-06-19", "2026-06-26", "2026-07-10", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-24", "2026-07-28", "2026-08-07", "2026-08-21", "2026-08-25", "2026-09-11", "2026-09-22"];
@@ -98,17 +102,33 @@
             console.error("Firestore 읽기 오류:", error);
         });
 
-        window.toggleEditMode = () => {
+        // ✅ 수정: toggleEditMode에 익명 로그인/로그아웃 적용
+        window.toggleEditMode = async () => {
             if (isEditMode) {
                 isEditMode = false;
+                try {
+                    await signOut(auth); // 로그아웃 → Firestore 쓰기 권한 해제
+                } catch (e) {
+                    console.error("로그아웃 오류:", e);
+                }
                 document.getElementById('editIndicator').style.display = 'none';
                 document.getElementById('editBtn').innerText = 'Edit';
             } else {
                 if (prompt("관리자 비밀번호:") === ADMIN_PASSWORD) {
-                    isEditMode = true;
-                    document.getElementById('editIndicator').style.display = 'block';
-                    document.getElementById('editBtn').innerText = 'Exit Edit';
-                } else alert("비밀번호 오류");
+                    try {
+                        await signInAnonymously(auth); // 익명 로그인 → Firestore 쓰기 권한 획득
+                        isEditMode = true;
+                        document.getElementById('editIndicator').style.display = 'block';
+                        document.getElementById('editBtn').innerText = 'Exit Edit';
+                    } catch (e) {
+                        console.error("익명 로그인 오류:", e);
+                        alert("로그인 실패: " + e.message);
+                        return;
+                    }
+                } else {
+                    alert("비밀번호 오류");
+                    return;
+                }
             }
             renderAll();
         };
@@ -228,7 +248,7 @@
                 dash.innerHTML += `
                     <div class="team-stat stat-${idx}">
                         <div class="team-info-header">
-                            ![image](${team.logo})
+                            <img src="${team.logo}" class="team-logo" alt="${team.name}">
                             <a href="${team.link}" target="_blank" class="team-link">${team.name}</a>
                         </div>
                         <div class="stats-text">
