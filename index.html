@@ -12,9 +12,9 @@
             --kia-red: #c7012e;
             --kia-black: #1d1d1b;
             --text-gray: #888;
-            --lost-day-bg: #dcdcdc; 
-            --past-day-bg: #f8f9fa; 
-            --calendar-border: #eeeeee; 
+            --lost-day-bg: #dcdcdc;
+            --past-day-bg: #f8f9fa;
+            --calendar-border: #eeeeee;
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); padding: 20px; min-width: 1100px; position: relative; }
         .container { width: 1050px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -23,7 +23,7 @@
         .team-stat { padding: 15px; border-radius: 10px; text-align: center; height: 120px; display: flex; flex-direction: column; justify-content: center; background: #ffffff; border: 3px solid #ddd; }
         .stat-0 { border-color: var(--dodgers-blue); color: var(--dodgers-blue); }
         .stat-1 { border-color: var(--orix-gold); color: var(--orix-gold); }
-        .stat-2 { border-color: var(--kia-red); color: var(--kia-red); } 
+        .stat-2 { border-color: var(--kia-red); color: var(--kia-red); }
         .team-info-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; }
         .team-logo { width: 40px; height: 40px; object-fit: contain; }
         .team-link { color: inherit; text-decoration: none; font-weight: 800; font-size: 1.35em; }
@@ -37,7 +37,7 @@
         .day { width: 150px; height: 130px; background: white; padding: 10px; overflow: hidden; box-sizing: border-box; transition: background 0.3s; border: 0.5px solid var(--calendar-border); }
         .day.today { border: 2px solid var(--kia-black) !important; z-index: 5; position: relative; }
         .day.is-past { background: var(--past-day-bg); color: #888; }
-        .day.all-lost { background: var(--lost-day-bg) !important; } 
+        .day.all-lost { background: var(--lost-day-bg) !important; }
         .day-num { font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.9em; }
         .team-row { display: flex; align-items: center; height: 28px; font-size: 0.8em; font-weight: 700; white-space: nowrap; }
         .game-time { color: var(--text-gray); margin-right: 4px; font-weight: normal; }
@@ -46,20 +46,41 @@
         .dot-1 { color: var(--orix-gold); }
         .dot-2 { color: var(--kia-red); }
         .game-cancelled { text-decoration: line-through; color: #bbb !important; }
-        input[type="checkbox"] { appearance: none; width: 15px; height: 15px; border: 1.5px solid #ccc; border-radius: 3px; margin-right: 6px; cursor: pointer; flex-shrink: 0; position: relative; }
-        input[type="checkbox"]:checked::after { content: 'L'; position: absolute; top: -3px; left: 3px; color: white; font-size: 11px; transform: scaleX(-1) rotate(-35deg); }
-        .check-0:checked { background-color: var(--dodgers-blue); border-color: var(--dodgers-blue); }
-        .check-1:checked { background-color: var(--orix-gold); border-color: var(--orix-gold); }
-        .check-2:checked { background-color: var(--kia-red); border-color: var(--kia-red); }
+
+        /* ✅ 3단계 토글 버튼 */
+        .result-btn {
+            width: 18px; height: 18px;
+            border: 1.5px solid #ccc; border-radius: 3px;
+            margin-right: 6px; cursor: pointer; flex-shrink: 0;
+            font-size: 9px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            background: white; color: transparent;
+            transition: all 0.15s; padding: 0;
+        }
+        .result-btn:disabled { cursor: default; opacity: 0.5; }
+        .result-btn.state-win-0  { background: var(--dodgers-blue); border-color: var(--dodgers-blue); color: white; }
+        .result-btn.state-win-1  { background: var(--orix-gold);    border-color: var(--orix-gold);    color: white; }
+        .result-btn.state-win-2  { background: var(--kia-red);      border-color: var(--kia-red);      color: white; }
+        .result-btn.state-draw-0 { background: white; border-color: var(--dodgers-blue); color: var(--dodgers-blue); }
+        .result-btn.state-draw-1 { background: white; border-color: var(--orix-gold);    color: var(--orix-gold); }
+        .result-btn.state-draw-2 { background: white; border-color: var(--kia-red);      color: var(--kia-red); }
+        .result-btn.state-loss   { background: white; border-color: #ccc; color: transparent; }
+
         .edit-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; z-index: 1000; }
         .edit-mode-indicator { text-align: center; color: #c7012e; font-weight: bold; margin-bottom: 10px; display: none; }
         .saving-indicator { text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 10px; display: none; }
+
+        .legend { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; font-size: 0.8em; color: #555; align-items: center; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-box { width: 14px; height: 14px; border-radius: 2px; border: 1.5px solid #999; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:bold; }
+        .legend-win  { background: #555; border-color: #555; color: white; }
+        .legend-draw { background: white; border-color: #555; color: #555; }
+        .legend-loss { background: white; border-color: #ccc; }
     </style>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        // ✅ 추가: Firebase Auth import
         import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -76,97 +97,71 @@
         let isEditMode = false;
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        // ✅ 추가: auth 인스턴스 생성
         const auth = getAuth(app);
         let currentDate = new Date();
-        
-        const dodgersOffDays = ["2026-03-30", "2026-04-03", "2026-04-10", "2026-04-17", "2026-05-01", "2026-05-08", "2026-05-22", "2026-05-29", "2026-06-09", "2026-06-19", "2026-06-26", "2026-07-10", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-24", "2026-07-28", "2026-08-07", "2026-08-21", "2026-08-25", "2026-09-11", "2026-09-22"];
-        const orixOffDays = ["2026-03-30", "2026-04-06","2026-04-10", "2026-04-13", "2026-04-20", "2026-04-27", "2026-04-30", "2026-05-07", "2026-05-11", "2026-05-13", "2026-05-18", "2026-05-21", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-26", "2026-06-29", "2026-07-06", "2026-07-09", "2026-07-13", "2026-07-17", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-08-04", "2026-08-10", "2026-08-17", "2026-08-21", "2026-08-24", "2026-08-31", "2026-09-03", "2026-09-07", "2026-09-11", "2026-09-13", "2026-09-14", "2026-09-18", "2026-09-22", "2026-09-24", "2026-09-28"];
+
+        const dodgersOffDays = ["2026-03-30","2026-04-03","2026-04-10","2026-04-17","2026-05-01","2026-05-08","2026-05-22","2026-05-29","2026-06-09","2026-06-19","2026-06-26","2026-07-10","2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-24","2026-07-28","2026-08-07","2026-08-21","2026-08-25","2026-09-11","2026-09-22"];
+        const orixOffDays = ["2026-03-30","2026-04-06","2026-04-10","2026-04-13","2026-04-20","2026-04-27","2026-04-30","2026-05-07","2026-05-11","2026-05-13","2026-05-18","2026-05-21","2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-06-01","2026-06-08","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-22","2026-06-26","2026-06-29","2026-07-06","2026-07-09","2026-07-13","2026-07-17","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-08-04","2026-08-10","2026-08-17","2026-08-21","2026-08-24","2026-08-31","2026-09-03","2026-09-07","2026-09-11","2026-09-13","2026-09-14","2026-09-18","2026-09-22","2026-09-24","2026-09-28"];
         const teams = [
-            { name: "LA Dodgers", short: "LAD", start: "2026-03-27", end: "2026-09-28", link: "https://www.mlb.com/dodgers", logo: "LAD.png" },
+            { name: "LA Dodgers",     short: "LAD", start: "2026-03-27", end: "2026-09-28", link: "https://www.mlb.com/dodgers",  logo: "LAD.png"  },
             { name: "Orix Buffaloes", short: "ORI", start: "2026-03-27", end: "2026-09-29", link: "https://www.buffaloes.co.jp/", logo: "Orix.png" },
-            { name: "Kia Tigers", short: "KIA", start: "2026-03-28", end: "2026-09-06", link: "https://tigers.co.kr/", logo: "kia.png" }
+            { name: "Kia Tigers",     short: "KIA", start: "2026-03-28", end: "2026-09-06", link: "https://tigers.co.kr/",        logo: "kia.png"  }
         ];
 
         let gameData = {};
 
         onSnapshot(doc(db, "baseball", "data"), (snapshot) => {
-            if (snapshot.exists()) {
-                gameData = snapshot.data();
-                renderAll();
-            } else {
-                console.log("데이터가 없습니다. 초기화합니다.");
-                gameData = {};
-            }
-        }, (error) => {
-            console.error("Firestore 읽기 오류:", error);
-        });
+            gameData = snapshot.exists() ? snapshot.data() : {};
+            renderAll();
+        }, (error) => { console.error("Firestore 읽기 오류:", error); });
 
-        // ✅ 수정: toggleEditMode에 익명 로그인/로그아웃 적용
         window.toggleEditMode = async () => {
             if (isEditMode) {
                 isEditMode = false;
-                try {
-                    await signOut(auth); // 로그아웃 → Firestore 쓰기 권한 해제
-                } catch (e) {
-                    console.error("로그아웃 오류:", e);
-                }
+                try { await signOut(auth); } catch (e) { console.error(e); }
                 document.getElementById('editIndicator').style.display = 'none';
                 document.getElementById('editBtn').innerText = 'Edit';
             } else {
                 if (prompt("관리자 비밀번호:") === ADMIN_PASSWORD) {
                     try {
-                        await signInAnonymously(auth); // 익명 로그인 → Firestore 쓰기 권한 획득
+                        await signInAnonymously(auth);
                         isEditMode = true;
                         document.getElementById('editIndicator').style.display = 'block';
                         document.getElementById('editBtn').innerText = 'Exit Edit';
-                    } catch (e) {
-                        console.error("익명 로그인 오류:", e);
-                        alert("로그인 실패: " + e.message);
-                        return;
-                    }
-                } else {
-                    alert("비밀번호 오류");
-                    return;
-                }
+                    } catch (e) { alert("로그인 실패: " + e.message); return; }
+                } else { alert("비밀번호 오류"); return; }
             }
             renderAll();
         };
 
         async function saveToFirebase() {
             try {
-                console.log("저장 시도:", gameData);
+                document.getElementById('savingIndicator').innerText = "💾 저장 중...";
+                document.getElementById('savingIndicator').style.color = '#888';
                 document.getElementById('savingIndicator').style.display = 'block';
-                
                 await setDoc(doc(db, "baseball", "data"), gameData, { merge: true });
-                
-                console.log("저장 성공!");
                 document.getElementById('savingIndicator').innerText = "✓ 저장 완료!";
                 document.getElementById('savingIndicator').style.color = '#4CAF50';
-                document.getElementById('savingIndicator').style.display = 'block';
-                
-                setTimeout(() => {
-                    document.getElementById('savingIndicator').style.display = 'none';
-                }, 2000);
-            }
-            catch (e) {
-                console.error("저장 오류 상세:", e);
-                alert("저장 실패: " + e.message + "\n\n콘솔(F12)에서 더 자세한 정보를 확인하세요.");
+                setTimeout(() => { document.getElementById('savingIndicator').style.display = 'none'; }, 2000);
+            } catch (e) {
+                alert("저장 실패: " + e.message);
                 document.getElementById('savingIndicator').style.display = 'none';
             }
         }
 
-        window.toggleWin = async (date, idx) => {
+        // ✅ 패 → 승 → 무 → 패 순서로 토글
+        window.cycleResult = async (date, idx) => {
             if (!isEditMode) return;
             if (!gameData[date]) gameData[date] = {};
-            if (!gameData[date][idx]) gameData[date][idx] = { win: false, time: "", memo: "", cancelled: false };
-            
-            if (gameData[date][idx].cancelled) {
-                alert("취소된 경기는 결과 입력을 할 수 없습니다.");
-                return;
-            }
-            
-            gameData[date][idx].win = !gameData[date][idx].win;
+            const cur = gameData[date][idx] || { win: false, draw: false, time: "", memo: "", cancelled: false };
+            if (cur.cancelled) { alert("취소된 경기는 결과 입력을 할 수 없습니다."); return; }
+
+            let next;
+            if (!cur.win && !cur.draw)      next = { ...cur, win: true,  draw: false }; // 패 → 승
+            else if (cur.win && !cur.draw)   next = { ...cur, win: false, draw: true  }; // 승 → 무
+            else                             next = { ...cur, win: false, draw: false }; // 무 → 패
+
+            gameData[date][idx] = next;
             await saveToFirebase();
         };
 
@@ -174,23 +169,13 @@
 
         window.editGame = async (date, idx) => {
             if (!hasGame(idx, date) || !isEditMode) return;
-            const cur = gameData[date]?.[idx] || { win: false, time: "", memo: "", cancelled: false };
-            
+            const cur = gameData[date]?.[idx] || { win: false, draw: false, time: "", memo: "", cancelled: false };
             const time = prompt(`경기 시간:`, cur.time); if (time === null) return;
             const memo = prompt(`메모:`, cur.memo); if (memo === null) return;
-            const cancelInput = prompt(`취소된 경기인가요? (y/n):`, cur.cancelled ? 'y' : 'n'); 
-            if (cancelInput === null) return;
-            
+            const cancelInput = prompt(`취소된 경기인가요? (y/n):`, cur.cancelled ? 'y' : 'n'); if (cancelInput === null) return;
             const isCancelled = cancelInput.toLowerCase() === 'y';
-
             if (!gameData[date]) gameData[date] = {};
-            gameData[date][idx] = { 
-                ...cur, 
-                time, 
-                memo, 
-                cancelled: isCancelled,
-                win: isCancelled ? false : cur.win
-            };
+            gameData[date][idx] = { ...cur, time, memo, cancelled: isCancelled, win: isCancelled ? false : cur.win, draw: isCancelled ? false : cur.draw };
             await saveToFirebase();
         };
 
@@ -209,9 +194,11 @@
 
         function renderAll() { updateStats(); renderCalendar(); }
 
-        function formatAvg(win, total) {
-            if (total === 0) return ".000";
-            let avg = (win / total).toFixed(3);
+        // ✅ 승률: 승 / (승 + 패) — 무승부 제외
+        function formatAvg(win, loss) {
+            const decided = win + loss;
+            if (decided === 0) return ".000";
+            let avg = (win / decided).toFixed(3);
             return avg.startsWith("0") ? avg.substring(1) : avg;
         }
 
@@ -219,31 +206,32 @@
             const dash = document.getElementById('dashboard');
             dash.innerHTML = '';
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
 
             teams.forEach((team, idx) => {
                 let playedDates = [];
                 let d = new Date(team.start);
-                
-                while(d < today) {
+                while (d < today) {
                     let dStr = d.toISOString().split('T')[0];
-                    if(hasGame(idx, dStr) && !gameData[dStr]?.[idx]?.cancelled) {
-                        playedDates.push(dStr);
-                    }
+                    if (hasGame(idx, dStr) && !gameData[dStr]?.[idx]?.cancelled) playedDates.push(dStr);
                     d.setDate(d.getDate() + 1);
                 }
 
-                const totalWins = playedDates.filter(date => gameData[date]?.[idx]?.win).length;
-                const totalPlayed = playedDates.length;
+                const wins   = playedDates.filter(dt => gameData[dt]?.[idx]?.win).length;
+                const draws  = playedDates.filter(dt => gameData[dt]?.[idx]?.draw).length;
+                const losses = playedDates.length - wins - draws;
 
-                const last10Entries = playedDates.slice(-10);
-                const last10Wins = last10Entries.filter(date => gameData[date]?.[idx]?.win).length;
+                const last10  = playedDates.slice(-10);
+                const l10w = last10.filter(dt => gameData[dt]?.[idx]?.win).length;
+                const l10d = last10.filter(dt => gameData[dt]?.[idx]?.draw).length;
+                const l10l = last10.length - l10w - l10d;
 
                 const sevenDaysAgo = new Date(today);
                 sevenDaysAgo.setDate(today.getDate() - 7);
-                const weeklyPlayedDates = playedDates.filter(date => new Date(date) >= sevenDaysAgo);
-                const weeklyWins = weeklyPlayedDates.filter(date => gameData[date]?.[idx]?.win).length;
-                const weeklyPlayed = weeklyPlayedDates.length;
+                const weekDates = playedDates.filter(dt => new Date(dt) >= sevenDaysAgo);
+                const ww = weekDates.filter(dt => gameData[dt]?.[idx]?.win).length;
+                const wd = weekDates.filter(dt => gameData[dt]?.[idx]?.draw).length;
+                const wl = weekDates.length - ww - wd;
 
                 dash.innerHTML += `
                     <div class="team-stat stat-${idx}">
@@ -252,9 +240,9 @@
                             <a href="${team.link}" target="_blank" class="team-link">${team.name}</a>
                         </div>
                         <div class="stats-text">
-                            Total  ${formatAvg(totalWins, totalPlayed)} (${totalWins}/${totalPlayed})<br>
-                            Last10 ${formatAvg(last10Wins, 10)} (${last10Wins}/10)<br>
-                            Weekly ${formatAvg(weeklyWins, weeklyPlayed)} (${weeklyWins}/${weeklyPlayed})
+                            Total  ${formatAvg(wins, losses)} (${wins}/${draws}/${losses})<br>
+                            Last10 ${formatAvg(l10w, l10l)} (${l10w}/${l10d}/${l10l})<br>
+                            Weekly ${formatAvg(ww, wl)} (${ww}/${wd}/${wl})
                         </div>
                     </div>`;
             });
@@ -269,33 +257,51 @@
             document.getElementById('currentMonthDisplay').innerText = `${year}. ${String(month + 1).padStart(2, '0')}`;
             const firstDay = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
+
             for (let i = 0; i < firstDay; i++) calendar.innerHTML += `<div class="day"></div>`;
+
             for (let d = 1; d <= lastDate; d++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const isToday = dateStr === todayStr;
-                const isPast = dateStr < todayStr;
-                let winCount = 0; let activeGamesInDay = 0; let teamRowsHtml = '';
-                
+                const isPast  = dateStr < todayStr;
+                let winCount = 0, activeGamesInDay = 0, teamRowsHtml = '';
+
                 teams.forEach((team, idx) => {
                     const isGameDay = hasGame(idx, dateStr);
-                    const info = gameData[dateStr]?.[idx] || { win: false, time: "", memo: "", cancelled: false };
-                    
+                    const info = gameData[dateStr]?.[idx] || { win: false, draw: false, time: "", memo: "", cancelled: false };
+
                     if (isGameDay) {
-                        activeGamesInDay++; if (info.win) winCount++;
+                        activeGamesInDay++;
+                        if (info.win) winCount++;
+
+                        // 버튼 상태 결정
+                        let btnState, btnLabel;
+                        if (info.cancelled)      { btnState = 'state-loss'; btnLabel = ''; }
+                        else if (info.win)        { btnState = `state-win-${idx}`;  btnLabel = 'W'; }
+                        else if (info.draw)       { btnState = `state-draw-${idx}`; btnLabel = 'D'; }
+                        else                      { btnState = 'state-loss'; btnLabel = ''; }
+
+                        const disabled = (!isEditMode || info.cancelled) ? 'disabled' : '';
                         const cancelClass = info.cancelled ? 'game-cancelled' : '';
-                        
+
                         teamRowsHtml += `<div class="team-row ${cancelClass}">
-                            <input type="checkbox" class="check-${idx}" ${info.win ? 'checked' : ''} ${isEditMode && !info.cancelled ? '' : 'disabled'} onchange="toggleWin('${dateStr}', ${idx})">
+                            <button class="result-btn ${btnState}" ${disabled} onclick="cycleResult('${dateStr}', ${idx})">${btnLabel}</button>
                             <span class="team-label" onclick="${isEditMode ? `editGame('${dateStr}', ${idx})` : `handleMemoClick('${info.memo}')`}">
                                 ${info.time ? `<span class="game-time">${info.time}</span>` : ''}${team.short}${info.memo ? `<span class="memo-dot dot-${idx}">●</span>` : ''}
                             </span></div>`;
-                    } else teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:21px;">-</span></div>`;
+                    } else {
+                        teamRowsHtml += `<div class="team-row"><span style="color:#ddd; margin-left:24px;">-</span></div>`;
+                    }
                 });
-                
+
                 let dayClass = isToday ? 'today' : '';
-                if (isPast) { dayClass += ' is-past'; if (activeGamesInDay > 0 && winCount === 0) dayClass += ' all-lost'; }
+                if (isPast) {
+                    dayClass += ' is-past';
+                    if (activeGamesInDay > 0 && winCount === 0) dayClass += ' all-lost';
+                }
                 calendar.innerHTML += `<div class="day ${dayClass}"><span class="day-num">${d}</span>${teamRowsHtml}</div>`;
             }
+
             const extra = (7 - ((firstDay + lastDate) % 7)) % 7;
             for (let j = 0; j < extra; j++) calendar.innerHTML += `<div class="day"></div>`;
         }
@@ -314,6 +320,13 @@
         <button class="btn-month" onclick="changeMonth(-1)">◀ 이전 달</button>
         <div id="currentMonthDisplay"></div>
         <button class="btn-month" onclick="changeMonth(1)">다음 달 ▶</button>
+    </div>
+    <div class="legend">
+        <span>결과 버튼:</span>
+        <div class="legend-item"><div class="legend-box legend-win">W</div> 승</div>
+        <div class="legend-item"><div class="legend-box legend-draw">D</div> 무</div>
+        <div class="legend-item"><div class="legend-box legend-loss"></div> 패</div>
+        <span style="color:#aaa; font-size:0.9em;">· Edit 모드에서 클릭할 때마다 승→무→패 전환</span>
     </div>
     <div id="calendar" class="calendar-grid"></div>
 </div>
