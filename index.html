@@ -153,7 +153,14 @@
         window.cycleResult = async (date, idx) => {
             if (!isEditMode) return;
             if (!gameData[date]) gameData[date] = {};
-            const cur = gameData[date][idx] || { win: false, draw: false, time: "", memo: "", cancelled: false };
+            const raw = gameData[date][idx] || {};
+            const cur = {
+                win: raw.win ?? false,
+                draw: raw.draw ?? false,       // ✅ undefined면 false로 확실히 보장
+                time: raw.time ?? "",
+                memo: raw.memo ?? "",
+                cancelled: raw.cancelled ?? false
+            };
             if (cur.cancelled) { alert("취소된 경기는 결과 입력을 할 수 없습니다."); return; }
 
             let next;
@@ -169,7 +176,14 @@
 
         window.editGame = async (date, idx) => {
             if (!hasGame(idx, date) || !isEditMode) return;
-            const cur = gameData[date]?.[idx] || { win: false, draw: false, time: "", memo: "", cancelled: false };
+            const raw = gameData[date][idx] || {};
+            const cur = {
+                win: raw.win ?? false,
+                draw: raw.draw ?? false,       // ✅ undefined면 false로 확실히 보장
+                time: raw.time ?? "",
+                memo: raw.memo ?? "",
+                cancelled: raw.cancelled ?? false
+            };
             const time = prompt(`경기 시간:`, cur.time); if (time === null) return;
             const memo = prompt(`메모:`, cur.memo); if (memo === null) return;
             const cancelInput = prompt(`취소된 경기인가요? (y/n):`, cur.cancelled ? 'y' : 'n'); if (cancelInput === null) return;
